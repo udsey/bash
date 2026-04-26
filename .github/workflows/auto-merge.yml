@@ -1,21 +1,24 @@
 name: Auto Merge Bot PRs
 
 on:
-  pull_request:
-    types: [opened, reopened, synchronize]
-  check_suite:
+  check_run:
     types: [completed]
 
 jobs:
   auto-merge:
     runs-on: ubuntu-latest
-    if: github.actor == 'exercism-solutions-syncer[bot]' || github.event.check_suite.conclusion == 'success'
+    if: github.event.check_run.conclusion == 'success'
     permissions:
       pull-requests: write
       contents: write
     steps:
       - uses: actions/checkout@v3
-      - name: Merge PR
-        run: gh pr merge --merge "${{ github.event.pull_request.number }}"
+      - name: Merge associated PR
+        run: |
+          PR=$(gh pr list --state open --json number,headSha \
+            -q ".[] | select(.headSha==\"${{ github.event.check_run.head_sha }}\") | .number")
+          if [ -n "$PR" ]; then
+            gh pr merge --merge "$PR"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
