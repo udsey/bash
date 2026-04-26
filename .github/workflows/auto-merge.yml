@@ -9,6 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     if: github.actor == 'exercism-solutions-syncer[bot]'
     steps:
+      - uses: actions/checkout@v3
       - name: Enable auto-merge
         run: gh pr merge --auto --merge "${{ github.event.pull_request.number }}"
         env:
